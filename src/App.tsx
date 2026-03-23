@@ -4,6 +4,7 @@ import ItemDetails from './pages/ItemDetails';
 import Dashboard from './pages/Dashboard';
 import Reader from './pages/Reader';
 import Login from './pages/Login';
+import Bookmarks from './pages/Bookmarks';
 import Navbar from './components/Navbar';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -31,6 +32,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <Reader />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/bookmarks" 
+                    element={
+                      <ProtectedRoute>
+                        <Bookmarks />
                       </ProtectedRoute>
                     } 
                   />

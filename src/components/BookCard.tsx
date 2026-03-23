@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom';
-import { Star, FileText, Video, Headphones, BookOpen } from 'lucide-react';
+import { Star, FileText, Video, Headphones, BookOpen, Bookmark } from 'lucide-react';
+import { useState } from 'react';
+import api from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 export interface LibraryItem {
   id: string;
@@ -10,15 +13,43 @@ export interface LibraryItem {
   category?: { name: string };
   is_free: boolean;
   rating?: number;
+  library_books?: any[];
+  library_book_authors?: any[];
+  library_book_sections?: any[];
+  library_book_citations?: any[];
 }
 
-export default function BookCard({ item }: { item: LibraryItem }) {
+export default function BookCard({ item, isBookmarkedInitial = false }: { item: LibraryItem, isBookmarkedInitial?: boolean }) {
+  const { isAuthenticated } = useAuth();
+  const [isBookmarked, setIsBookmarked] = useState(isBookmarkedInitial);
+  const [isToggling, setIsToggling] = useState(false);
+
   const Icon = {
     Book: BookOpen,
     Video: Video,
     Audio: Headphones,
     Paper: FileText,
   }[item.type] || BookOpen;
+
+  const handleToggleBookmark = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) return;
+    
+    try {
+      setIsToggling(true);
+      // Assuming the API endpoint toggles the bookmark status
+      // and returns the new status or just a success message.
+      // For simplicity, we'll just toggle locally after a successful call.
+      await api.post('/library/bookmarks', { item_id: item.id });
+      setIsBookmarked(!isBookmarked);
+    } catch (err) {
+      console.error('Error toggling bookmark:', err);
+    } finally {
+      setIsToggling(false);
+    }
+  };
 
   return (
     <Link 
@@ -38,14 +69,26 @@ export default function BookCard({ item }: { item: LibraryItem }) {
           </div>
         )}
         
+        {/* Bookmark Tag */}
+        <button 
+          onClick={handleToggleBookmark}
+          disabled={isToggling}
+          className={`absolute top-3 right-3 p-2 rounded-full glass transition-all hover:scale-110 z-10 ${
+            isBookmarked ? 'text-primary' : 'text-foreground/40 hover:text-primary'
+          }`}
+          title={isBookmarked ? 'Remove Bookmark' : 'Add Bookmark'}
+        >
+          <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} />
+        </button>
+
         {/* Type Badge */}
         <div className="absolute top-3 left-3 glass px-2.5 py-1 rounded-full flex items-center space-x-1.5 shadow-sm">
           <Icon className="h-3.5 w-3.5 text-foreground/80" />
           <span className="text-xs font-medium text-foreground/90">{item.type}</span>
         </div>
         
-        {/* Access Badge */}
-        <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold shadow-sm ${
+        {/* Access Badge - Moved down to not overlap bookmark */}
+        <div className={`absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold shadow-sm ${
           item.is_free ? 'bg-green-500/90 text-white' : 'bg-primary/90 text-white'
         }`}>
           {item.is_free ? 'FREE' : 'PREMIUM'}

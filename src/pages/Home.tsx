@@ -7,10 +7,12 @@ import api from '../lib/api';
 import '../styles/Home.css';
 
 const CATEGORIES = ['All', 'Science', 'History', 'Literature', 'Textbooks', 'Past Papers'];
+const BOOK_TYPES = ['All', 'public_domain', 'oer', 'licensed', 'external_reference', 'video', 'audio', 'paper'];
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedBookType, setSelectedBookType] = useState('All');
   const [items, setItems] = useState<LibraryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,11 +21,6 @@ export default function Home() {
     const fetchItems = async () => {
       try {
         setIsLoading(true);
-        // Note: The backend route /api/public/items might be better if it's public.
-        // Checking libraryRoutes.js, /api/library/items is protected.
-        // I'll try /api/public/items first if it exists, otherwise /api/library/items.
-        // Since I don't see publicRoutes details yet, I'll stick to library for now
-        // but it might require login if libraryRoutes protects it.
         const response = await api.get('/library/items');
         setItems(response.data);
       } catch (err: any) {
@@ -38,17 +35,35 @@ export default function Home() {
   }, []);
 
   const filteredItems = items.filter(item => {
-    if (activeTab === 'All') return true;
-    if (activeTab === 'Science') return item.title.includes('Calculus') || item.title.includes('Biology') || item.title.includes('Chemistry') || item.title.includes('Physics');
-    if (activeTab === 'History') return item.title.includes('History');
-    if (activeTab === 'Literature') return item.title.includes('Gatsby');
-    if (activeTab === 'Textbooks') return item.type === 'Book';
-    if (activeTab === 'Past Papers') return item.type === 'Paper';
-    return true;
-  }).filter(item => 
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.author.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    // Category Filter
+    if (activeTab !== 'All') {
+      if (activeTab === 'Science') {
+        const titleLower = item.title.toLowerCase();
+        if (!(titleLower.includes('calculus') || titleLower.includes('biology') || titleLower.includes('chemistry') || titleLower.includes('physics'))) return false;
+      } else if (activeTab === 'History' && !item.title.toLowerCase().includes('history')) return false;
+      else if (activeTab === 'Literature' && !item.title.toLowerCase().includes('gatsby')) return false;
+      else if (activeTab === 'Textbooks' && item.type !== 'Book') return false;
+      else if (activeTab === 'Past Papers' && item.type !== 'Paper') return false;
+    }
+
+    // Book Type Filter
+    const bookMeta = item.library_books?.[0];
+    if (selectedBookType !== 'All') {
+      if (['video', 'audio', 'paper'].includes(selectedBookType)) {
+        if (item.type.toLowerCase() !== selectedBookType) return false;
+      } else {
+        if (bookMeta?.book_type !== selectedBookType) return false;
+      }
+    }
+
+    // Search Filter
+    const matchesSearch = 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      bookMeta?.library_publishers?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesSearch;
+  });
 
   return (
     <div className="home-container">
@@ -133,7 +148,7 @@ export default function Home() {
           </div>
 
           {/* Categories Filter */}
-          <div className="categories-wrapper">
+          <div className="categories-wrapper space-y-4">
             <div className="categories-scroll">
               {CATEGORIES.map(cat => (
                 <button
@@ -142,6 +157,23 @@ export default function Home() {
                   className={`category-button ${activeTab === cat ? 'active' : ''}`}
                 >
                   {cat}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2 items-center text-xs">
+              <span className="text-muted-foreground mr-2 font-semibold uppercase">Type:</span>
+              {BOOK_TYPES.map(type => (
+                <button
+                  key={type}
+                  onClick={() => setSelectedBookType(type)}
+                  className={`px-3 py-1 rounded-full border transition-all ${
+                    selectedBookType === type 
+                      ? 'bg-primary text-primary-foreground border-primary shadow-lg' 
+                      : 'bg-secondary/50 text-muted-foreground border-border hover:bg-secondary'
+                  }`}
+                >
+                  {type.replace('_', ' ')}
                 </button>
               ))}
             </div>

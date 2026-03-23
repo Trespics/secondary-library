@@ -1,13 +1,14 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Maximize2, Settings, Bookmark, Loader2 } from 'lucide-react';
+import { ArrowLeft, Settings, Bookmark, Loader2 } from 'lucide-react';
 import api from '../lib/api';
+import '../styles/Reader.css';
 
 export default function Reader() {
   const { id } = useParams();
   const [item, setItem] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -25,75 +26,144 @@ export default function Reader() {
     fetchItem();
   }, [id]);
 
+  const bookMetadata = item?.library_books?.[0];
+  const sections = item?.library_book_sections || [];
+  const currentSection = sections[currentSectionIndex];
+  const license = bookMetadata?.library_licenses;
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+      <div className="reader-loading">
+        <Loader2 className="loading-spinner" />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background flex flex-col pt-0 pb-0 w-full h-screen h-[100svh]">
-      
+    <div className="reader-page">
       {/* Reader Toolbar */}
-      <div className="glass h-14 w-full border-b border-border flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
-        <div className="flex items-center space-x-4">
-          <Link to={`/item/${id}`} className="p-2 hover:bg-secondary rounded-full transition-colors text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-5 w-5" />
+      <div className="reader-toolbar">
+        <div className="toolbar-left">
+          <Link to={`/item/${id}`} className="back-button">
+            <ArrowLeft />
           </Link>
-          <div className="hidden sm:block">
-            <h1 className="font-semibold text-sm line-clamp-1">{item?.title || 'Loading Resource...'}</h1>
-            <p className="text-xs text-muted-foreground">{item?.author || 'Standardized Curriculum'}</p>
+          <div className="item-info">
+            <h1 className="item-title">{item?.title || 'Loading Resource...'}</h1>
+            <p className="item-author">
+              {item?.library_book_authors?.map((ba: any) => ba.library_authors.name).join(', ') || item?.author}
+            </p>
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <button className="p-2 hover:bg-secondary rounded-full transition-colors text-muted-foreground" title="Bookmark">
-            <Bookmark className="h-5 w-5" />
-          </button>
-          <button className="p-2 hover:bg-secondary rounded-full transition-colors text-muted-foreground" title="Display Settings">
-            <Settings className="h-5 w-5" />
-          </button>
-          <button className="p-2 hover:bg-secondary rounded-full transition-colors text-muted-foreground hidden sm:block" title="Fullscreen">
-            <Maximize2 className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-      
-      {/* Content Area - PDF or Text */}
-      <div className="flex-1 w-full bg-secondary/30 flex justify-center overflow-auto p-4 sm:p-8 relative">
-        {/* Dummy PDF Container */}
-        <div className="w-full max-w-4xl bg-white text-black min-h-screen shadow-2xl p-8 sm:p-16 rounded-sm">
-          <h2 className="text-3xl font-serif font-bold mb-6">{item?.title}</h2>
-          <p className="font-serif text-lg leading-relaxed mb-6 text-justify italic text-muted-foreground">
-            This is a preview mode for the selected {item?.type || 'resource'}.
-          </p>
-          <p className="font-serif text-lg leading-relaxed mb-6 text-justify">
-            Calculus is the mathematical study of continuous change, in the same way that geometry 
-            is the study of shape, and algebra is the study of generalizations of arithmetic operations.
-            The derivative of a function of a real variable measures the sensitivity to change of the 
-            function value (output value) with respect to a change in its argument (input value).
-          </p>
-          <p className="font-serif text-lg leading-relaxed mb-6 text-justify">
-            Derivatives are a fundamental tool of calculus. For example, the derivative of the 
-            position of a moving object with respect to time is the object's velocity: this measures 
-            how quickly the position of the object changes when time advances.
-          </p>
-          <div className="my-10 p-6 bg-slate-100 rounded-lg border-l-4 border-slate-400">
-            <p className="font-mono text-center text-xl">
-              f'(x) = lim (h→0) [f(x+h) - f(x)] / h
-            </p>
+        <div className="toolbar-right">
+          {sections.length > 0 && (
+            <div className="section-indicator">
+              Section {currentSectionIndex + 1} of {sections.length}
+            </div>
+          )}
+          <div className="toolbar-actions">
+            <button className="icon-button" title="Bookmark">
+              <Bookmark />
+            </button>
+            <button className="icon-button" title="Display Settings">
+              <Settings />
+            </button>
           </div>
-          <p className="font-serif text-lg leading-relaxed mb-6 text-justify">
-            The process of finding a derivative is called differentiation. The reverse process 
-            is called antidifferentiation. The fundamental theorem of calculus relates antidifferentiation 
-            with integration. Differentiation and integration constitute the two fundamental operations in 
-            single-variable calculus.
-          </p>
         </div>
       </div>
       
+      {/* Content Area */}
+      <div className="reader-content">
+        <div className="content-wrapper">
+          {currentSection ? (
+            <>
+              <h2 className="section-title">{currentSection.section_title}</h2>
+              <div 
+                className="section-body prose"
+                dangerouslySetInnerHTML={{ __html: currentSection.content_body || '<p>No content available for this section.</p>' }}
+              />
+            </>
+          ) : item?.file_url?.toLowerCase().endsWith('.pdf') ? (
+            <div className="pdf-viewer">
+              <iframe 
+                src={`${item.file_url}#toolbar=1`} 
+                className="pdf-iframe"
+                title={item.title}
+              />
+            </div>
+          ) : (
+            <div className="content-placeholder">
+              <h2 className="placeholder-title">{item?.title}</h2>
+              <p className="placeholder-description">
+                This item is available for reading.
+              </p>
+              <div className="placeholder-box">
+                <p className="placeholder-text">Content placeholder for non-sectioned book.</p>
+                {item?.file_url && (
+                  <a 
+                    href={item.file_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="open-source-button"
+                  >
+                    Open Source File
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Persistent Section Navigation */}
+        {sections.length > 0 && (
+          <div className="section-navigation">
+            <button 
+              disabled={currentSectionIndex === 0}
+              onClick={() => setCurrentSectionIndex(i => i - 1)}
+              className="nav-button"
+            >
+              Previous
+            </button>
+            <span className="nav-counter">
+              {currentSectionIndex + 1} / {sections.length}
+            </span>
+            <button 
+              disabled={currentSectionIndex === sections.length - 1}
+              onClick={() => setCurrentSectionIndex(i => i + 1)}
+              className="nav-button nav-button-primary"
+            >
+              Next Section
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Persistent Attribution Footer */}
+      {(bookMetadata?.book_type === 'oer' || license?.attribution_required) && (
+        <div className="attribution-footer">
+          <div className="attribution-info">
+            <span>{item?.title}</span>
+            
+            <span className="attribution-separator">|</span>
+            <span>By {item?.library_book_authors?.map((ba: any) => ba.library_authors.name).join(', ') || item?.author}</span>
+            <span className="attribution-separator">|</span>
+            <span className="attribution-license">{license?.name || 'Standard License'}</span>
+          </div>
+          
+          <div className="attribution-link">
+            {bookMetadata?.book_type === 'oer' ? (
+              <>
+                <span>Access for free at: </span>
+                <a href={currentSection?.section_url || bookMetadata?.source_url} target="_blank" rel="noopener noreferrer">
+                  {currentSection?.section_url || bookMetadata?.source_url}
+                </a>
+              </>
+            ) : (
+              <span className="attribution-text">{license?.attribution_text || 'Proper attribution required.'}</span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

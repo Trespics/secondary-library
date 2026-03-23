@@ -1,29 +1,26 @@
-import { BookOpen, Heart, Settings, LogOut, Bell, Star, Bookmark, Library } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { LogOut, Bell, Star, Bookmark, Library, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface SidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
   onLogout: () => void;
 }
 
-export default function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarProps) {
+export default function Sidebar({ onLogout }: SidebarProps) {
   const { user } = useAuth();
   const initials = user ? `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}` : 'U';
 
   const navItems = [
-    { id: 'library', icon: Library, label: 'My Library' },
-    { id: 'reading', icon: BookOpen, label: 'Currently Reading' },
-    { id: 'favorites', icon: Heart, label: 'Favorites' },
-    { id: 'bookmarks', icon: Bookmark, label: 'Bookmarks' },
-    { id: 'settings', icon: Settings, label: 'Settings' },
-  ];
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/', icon: Library, label: 'Library' },   
+    { path: '/bookmarks', icon: Bookmark, label: 'Bookmarks' },
+  ];    
 
   return (
     <aside className="dashboard-sidebar">
       <div className="sidebar-card">
         <div className="profile-section">
-          <div className="profile-avatar">
+          <div className="profile-avatar">   
             <span className="avatar-initials">{initials}</span>
             <div className="avatar-status"></div>
           </div>
@@ -38,15 +35,15 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarPr
 
         <nav className="sidebar-nav">
           {navItems.map(item => (
-            <button 
-              key={item.id}
-              className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(item.id)}
+            <NavLink 
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
             >
               <item.icon className="nav-icon" />
               <span>{item.label}</span>
-              {activeTab === item.id && <div className="nav-indicator" />}
-            </button>
+              <div className="nav-indicator" />
+            </NavLink>
           ))}
         </nav>
 
