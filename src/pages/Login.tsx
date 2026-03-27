@@ -53,7 +53,7 @@ const Login: React.FC = () => {
                 <Library className="logo-icon" />
               </div>
               <span className="logo-text">
-                CBC <span className="logo-highlight">Library</span>
+                FloranteHub <span className="logo-highlight">Library</span>
               </span>
             </Link>
             <h1 className="login-title">Welcome Back</h1>
