@@ -16,7 +16,7 @@
   border-bottom-color: rgba(59, 130, 246, 0.2);
 }
 
-.navbar-container {
+.navbar-container {   
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 1rem;
@@ -80,8 +80,8 @@
 }
 
 .logo-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 3.5rem;
+  height: 3.5rem;
   color: #3b82f6;
 }
 

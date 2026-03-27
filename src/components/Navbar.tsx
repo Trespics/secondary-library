@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Library, Search, User, Menu, X, Bell, BookOpen, LogOut } from 'lucide-react';
+import { Search, User, Menu, X, Bell, BookOpen, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Navbar.css';
+import Logo from "../assets/logo1.png"
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,11 +51,9 @@ export default function Navbar() {
           
           {/* Logo */}
           <Link to="/" className="navbar-logo">
-            <div className="logo-icon-wrapper">
-              <Library className="logo-icon" />
-            </div>
+              <img src={Logo} alt="Logo" className="logo-icon" />
             <span className="logo-text">
-              FloranteHub <span className="logo-highlight">Library</span>
+              FloranteHub &nbsp; Library
             </span>
           </Link>
 

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
-import { Library, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 import '../styles/Login.css';
+import Logo from "../assets/logo1.png"
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -49,14 +50,12 @@ const Login: React.FC = () => {
         <div className="login-card">
           <div className="login-header">
             <Link to="/" className="login-logo">
-              <div className="logo-icon-wrapper">
-                <Library className="logo-icon" />
-              </div>
+                <img src={Logo} alt="Logo" className="logo-icon" />
               <span className="logo-text">
-                FloranteHub <span className="logo-highlight">Library</span>
+                FloranteHub &nbsp; Library
               </span>
             </Link>
-            <h1 className="login-title">Welcome Back</h1>
+            <h1 className="login-title">Welcome &nbsp; Back</h1>
             <p className="login-subtitle">Sign in to access your dashboard and resources</p>
           </div>
 
